@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
+import Highcharts from "highcharts";
+import funnel from "highcharts/modules/funnel";
+import highchartsMore from "highcharts/highcharts-more";
 import {
   ResponsiveContainer,
   FunnelChart,
@@ -12,16 +15,57 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowsAltV } from "@fortawesome/free-solid-svg-icons";
 import "./ResizableFunnelChart.css";
 
+// Initialize Highcharts modules
+funnel(Highcharts);
+highchartsMore(Highcharts);
+
+// Disable Highcharts watermark
+Highcharts.setOptions({
+  credits: {
+    enabled: false,
+  },
+});
+
 const data = [
-  { name: "Step 1", value: 100, fill: "#8884d8" },
-  { name: "Step 2", value: 80, fill: "#83a6ed" },
-  { name: "Step 3", value: 60, fill: "#8dd1e1" },
-  { name: "Step 4", value: 40, fill: "#82ca9d" },
-  { name: "Step 5", value: 20, fill: "#a4de6c" },
+  { name: "Visitors", value: 1000, fill: "#8884d8" },
+  { name: "Sign-ups", value: 800, fill: "#83a6ed" },
+  { name: "Active Users", value: 600, fill: "#8dd1e1" },
+  { name: "Purchases", value: 400, fill: "#82ca9d" },
+  { name: "Returning Customers", value: 200, fill: "#a4de6c" },
 ];
 
 const ResizableFunnelChart = () => {
   const [height, setHeight] = useState(400);
+  const chartRef = useRef(null);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      Highcharts.chart(chartRef.current, {
+        chart: {
+          type: "funnel",
+        },
+        title: {
+          text: "Filter Funnel Chart",
+        },
+        plotOptions: {
+          series: {
+            dataLabels: {
+              enabled: true,
+              format: "<b>{point.name}</b> ({point.y:.0f})",
+            },
+            neckWidth: "30%",
+            neckHeight: "25%",
+          },
+        },
+        series: [
+          {
+            name: "Steps",
+            data: data.map(({ name, value }) => [name, value]),
+          },
+        ],
+      });
+    }
+  }, [data]);
 
   const onResize = (event, { size }) => {
     setHeight(size.height);
@@ -41,19 +85,7 @@ const ResizableFunnelChart = () => {
         </span>
       }
     >
-      <ResponsiveContainer width="100%" height="100%">
-        <FunnelChart>
-          <Tooltip />
-          <Funnel dataKey="value" data={data} isAnimationActive>
-            <LabelList
-              position="right"
-              fill="#000"
-              stroke="none"
-              dataKey="name"
-            />
-          </Funnel>
-        </FunnelChart>
-      </ResponsiveContainer>
+      <div ref={chartRef} style={{ width: "100%", height: "100%" }} />
     </ResizableBox>
   );
 };
